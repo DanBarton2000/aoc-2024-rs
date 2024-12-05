@@ -1,10 +1,15 @@
 use std::cmp::PartialEq;
+use std::collections::HashMap;
 use std::fs;
 use std::io::{self, prelude::*};
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Copy, Clone)]
 enum TokenType {
     Mul,
+    Do,
+    Don,
+    Apostrophe,
+    T,
     LeftBracket,
     Number,
     Comma,
@@ -30,16 +35,24 @@ struct Lexer {
     source: Vec<char>,
     tokens: Vec<Token>,
     current: usize,
-    start: usize
+    start: usize,
+    key_words: HashMap<String, TokenType>
 }
 
 impl Lexer {
     fn new(source: Vec<char>) -> Lexer {
+
+        let mut map = HashMap::new();
+        map.insert("mul".to_string(), TokenType::Mul);
+        map.insert("don".to_string(), TokenType::Don);
+        map.insert("do".to_string(), TokenType::Do);
+
         Lexer {
             source,
             tokens: vec![],
             current: 0,
             start: 0,
+            key_words: map
         }
     }
 
@@ -69,23 +82,13 @@ impl Lexer {
             '(' => { self.add_token(TokenType::LeftBracket); }
             ')' => { self.add_token(TokenType::RightBracket); }
             ',' => { self.add_token(TokenType::Comma); }
-            'm' => {
-                if let Some(u) = self.peek() {
-                    if u == 'u' {
-                        self.next_character();
-
-                        if let Some(l) = self.peek() {
-                            if l == 'l' {
-                                self.next_character();
-                                self.add_token(TokenType::Mul);
-                            }
-                        }
-                    }
-                }
-            }
+            't' => { self.add_token(TokenType::T); }
+            '\'' => { self.add_token(TokenType::Apostrophe); }
             _ => {
                 if c.is_numeric() {
                     self.number();
+                } else if c.is_alphabetic() {
+                    self.word(&c);
                 } else {
                     self.add_token(TokenType::Other);
                 }
@@ -103,6 +106,34 @@ impl Lexer {
         }
 
         self.add_token(TokenType::Number);
+    }
+
+    fn word(&mut self, first_char: &char) {
+        let mut key_word = String::new();
+        key_word.push(*first_char);
+
+        while !self.at_end() {
+            let mut starts_with = false;
+
+            if let Some(token) = self.key_words.get(&key_word) {
+                self.add_token(*token);
+                return;
+            }
+
+            for key in self.key_words.keys() {
+                if key.starts_with(&key_word) {
+                    starts_with = true;
+                }
+            }
+
+            if starts_with {
+                key_word.push(self.next_character());
+            } else {
+                break;
+            }
+        }
+
+        self.add_token(TokenType::Other);
     }
 
     fn scan_tokens(&mut self) {
