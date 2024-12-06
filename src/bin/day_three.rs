@@ -115,9 +115,20 @@ impl Lexer {
         while !self.at_end() {
             let mut starts_with = false;
 
-            if let Some(token) = self.key_words.get(&key_word) {
-                self.add_token(*token);
-                return;
+            let mut add = true;
+            if key_word == "do" {
+                if let Some(c) = self.peek() {
+                    if c == 'n' {
+                        add = false;
+                    }
+                }
+            }
+
+            if add {
+                if let Some(token) = self.key_words.get(&key_word) {
+                    self.add_token(*token);
+                    return;
+                }
             }
 
             for key in self.key_words.keys() {
@@ -193,15 +204,96 @@ fn part_one() -> io::Result<()> {
 
     println!("{result}");
 
-    // mul(
-    // number
-    // ,
-    // number
-    // )
+    Ok(())
+}
+
+fn part_two() -> io::Result<()> {
+    let mut file = fs::File::open(".\\files\\day_three.txt")?;
+    let mut contents = String::new();
+    file.read_to_string(&mut contents)?;
+    let char_vec: Vec<char> = contents.chars().collect();
+
+    let mut lexer: Lexer = Lexer::new(char_vec);
+    lexer.scan_tokens();
+
+    let mut index = 0;
+    let mut result: u32 = 0;
+
+    let mut multiplier = 1;
+
+    while let Some(token) = lexer.token(index) {
+        index += 1;
+
+        if token.token_type == TokenType::Do {
+            if let Some(left) = lexer.token(index) {
+                if left.token_type == TokenType::LeftBracket {
+                    index += 1;
+
+                    if let Some(right) = lexer.token(index) {
+                        if right.token_type == TokenType::RightBracket {
+                            index += 1;
+                            multiplier = 1;
+                        }
+                    }
+                }
+            }
+        } else if token.token_type == TokenType::Don {
+            if let Some(apostrophe) = lexer.token(index) {
+                if apostrophe.token_type == TokenType::Apostrophe {
+                    index += 1;
+
+                    if let Some(t) = lexer.token(index) {
+                        if t.token_type == TokenType::T {
+                            index += 1;
+
+                            if let Some(left) = lexer.token(index) {
+                                if left.token_type == TokenType::LeftBracket {
+                                    index += 1;
+
+                                    if let Some(right) = lexer.token(index) {
+                                        if right.token_type == TokenType::RightBracket {
+                                            index += 1;
+                                            multiplier = 0;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
+        if token.token_type != TokenType::Mul { continue; }
+
+        let Some(left) = lexer.token(index) else { continue; };
+        if left.token_type != TokenType::LeftBracket { continue; }
+        index += 1;
+
+        let Some(number_one) = lexer.token(index) else { continue; };
+        if number_one.token_type != TokenType::Number { continue; }
+        index += 1;
+
+        let Some(comma) = lexer.token(index) else { continue; };
+        if comma.token_type != TokenType::Comma { continue; }
+        index += 1;
+
+        let Some(number_two) = lexer.token(index) else { continue; };
+        if number_two.token_type != TokenType::Number { continue; }
+        index += 1;
+
+        let Some(right) = lexer.token(index) else { continue; };
+        if right.token_type != TokenType::RightBracket { continue; }
+
+        result += number_one.original_text.parse::<u32>().unwrap() * number_two.original_text.parse::<u32>().unwrap() * multiplier;
+    }
+
+    println!("{result}");
 
     Ok(())
 }
 
 fn main() -> io::Result<()> {
-    part_one()
+    part_two()
 }
