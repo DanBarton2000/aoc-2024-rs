@@ -37,25 +37,49 @@ fn map_and_updates() -> std::io::Result<(HashMap<u32, HashSet<u32>>, Vec<Vec<u32
     Ok((map, updates))
 }
 
+fn check_validity(update: &Vec<u32>, map: &HashMap<u32, HashSet<u32>>) -> bool {
+    let mut seen: HashSet<u32> = HashSet::new();
+    let mut valid = true;
+
+    for num in update {
+        if let Some(set) = map.get(&num)
+        {
+            if seen.intersection(set).count() > 0 {
+                valid = false;
+                break;
+            }
+        }
+
+        seen.insert(*num);
+    }
+
+    valid
+}
+
+fn check_validity_indices(update: &Vec<u32>, map: &HashMap<u32, HashSet<u32>>) -> Option<(usize, usize)> {
+    let mut seen: HashMap<u32, usize> = HashMap::new();
+
+    for (i, num) in update.iter().enumerate() {
+        if let Some(set) = map.get(&num) {
+            for k in seen.keys() {
+                if set.contains(k) {
+                    return Some((i, seen[k]));
+                }
+            }
+        }
+
+        seen.insert(*num, i);
+    }
+
+    None
+}
+
 fn part_one() -> std::io::Result<()> {
     let (map, updates) = map_and_updates()?;
     let mut count: u32 = 0;
 
     for update in updates {
-        let mut seen: HashSet<u32> = HashSet::new();
-        let mut valid = true;
-
-        for num in &update {
-            if let Some(set) = map.get(&num)
-            {
-                if seen.intersection(set).count() > 0 {
-                    valid = false;
-                    break;
-                }
-            }
-
-            seen.insert(*num);
-        }
+        let valid = check_validity(&update, &map);
 
         if valid {
             count += update[update.len() / 2];
@@ -67,6 +91,31 @@ fn part_one() -> std::io::Result<()> {
     Ok(())
 }
 
+fn part_two() -> std::io::Result<()> {
+    let (map, updates) = map_and_updates()?;
+    let mut result = 0;
+
+    for mut update in updates {
+
+        let mut add = false;
+
+        loop {
+            let mut valid_indices = check_validity_indices(&update, &map);
+            let Some((a, b)) = valid_indices else { break; };
+            update.swap(a, b);
+            add = true;
+        }
+
+        if add {
+            result += update[update.len() / 2];
+        }
+    }
+
+    println!("{result}");
+
+    Ok(())
+}
+
 fn main() -> std::io::Result<()> {
-    part_one()
+    part_two()
 }
