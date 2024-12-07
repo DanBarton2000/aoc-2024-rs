@@ -1,4 +1,5 @@
 use std::{fs, io};
+use std::collections::HashMap;
 use std::io::BufRead;
 
 enum Search {
@@ -99,6 +100,41 @@ fn part_one() -> io::Result<()> {
 
 }
 
+fn part_two() -> io::Result<()> {
+    let file = fs::File::open(".\\files\\day_four.txt")?;
+    let reader = io::BufReader::new(file);
+    let mut content = vec![];
+
+    for line in reader.lines() {
+        content.push(line?);
+    }
+
+    let mut char_map = HashMap::new();
+    char_map.insert('M', 'S');
+    char_map.insert('S', 'M');
+
+    let mut count: u32 = 0;
+
+    for r in 1..content.len() - 1 {
+        for c in 1..content[0].len() - 1 {
+            if content[r].as_bytes()[c] != u8::try_from('A').unwrap() { continue; }
+            let top_left: char = content[r-1].as_bytes()[c-1] as char;
+            let Some(bottom_right) = char_map.get(&top_left) else { continue; };
+            if content[r+1].as_bytes()[c+1] as char != *bottom_right { continue; }
+
+            let top_right: char = content[r-1].as_bytes()[c+1] as char;
+            let Some(bottom_left) = char_map.get(&top_right) else { continue; };
+            if content[r+1].as_bytes()[c-1] as char != *bottom_left { continue; }
+
+            count += 1;
+        }
+    }
+
+    println!("{count}");
+
+    Ok(())
+}
+
 fn main() -> io::Result<()> {
-    part_one()
+    part_two()
 }
