@@ -14,7 +14,7 @@ enum Search {
 }
 
 fn search_recursive(row: usize, column: usize, content: &Vec<String>, search_word: &str, search: Search) -> u32 {
-    if search_word.len() == 0 { return 1; }
+    if search_word.is_empty() { return 1; }
     if search_word.len() == 1 && content[row].as_bytes()[column] == search_word.as_bytes()[0] { return 1; }
     if content[row].as_bytes()[column] != search_word.as_bytes()[0] { return 0; }
 
@@ -22,43 +22,43 @@ fn search_recursive(row: usize, column: usize, content: &Vec<String>, search_wor
 
     match search {
         Search::Up => {
-            if (row as i32) - 1 >= 0 {
-                return search_recursive(row - 1, column, &content, &search_word[range], search);
+            if (row as i32) > 0 {
+                return search_recursive(row - 1, column, content, &search_word[range], search);
             }
         }
         Search::Down => {
             if row + 1 < content.len() {
-                return search_recursive(row + 1, column, &content, &search_word[range], search);
+                return search_recursive(row + 1, column, content, &search_word[range], search);
             }
         }
         Search::Right => {
             if column + 1 < content[0].len() {
-                return search_recursive(row, column + 1, &content, &search_word[range], search);
+                return search_recursive(row, column + 1, content, &search_word[range], search);
             }
         }
         Search::Left => {
-            if (column as i32) - 1 >= 0 {
-                return search_recursive(row, column - 1, &content, &search_word[range], search);
+            if (column as i32) > 0 {
+                return search_recursive(row, column - 1, content, &search_word[range], search);
             }
         }
         Search::LeftDown => {
-            if (column as i32) - 1 >= 0 && row + 1 < content.len() {
-                return search_recursive(row + 1, column - 1, &content, &search_word[range], search);
+            if (column as i32) > 0 && row + 1 < content.len() {
+                return search_recursive(row + 1, column - 1, content, &search_word[range], search);
             }
         }
         Search::LeftUp => {
-            if (column as i32) - 1 >= 0 && (row as i32) - 1 >= 0 {
-                return search_recursive(row - 1, column - 1, &content, &search_word[range], search);
+            if (column as i32) > 0 && (row as i32) > 0 {
+                return search_recursive(row - 1, column - 1, content, &search_word[range], search);
             }
         }
         Search::RightDown => {
             if column + 1 < content[0].len() && row + 1 < content.len() {
-                return search_recursive(row + 1, column + 1, &content, &search_word[range], search);
+                return search_recursive(row + 1, column + 1, content, &search_word[range], search);
             }
         }
         Search::RightUp => {
-            if column + 1 < content[0].len() && (row as i32) - 1 >= 0 {
-                return search_recursive(row - 1, column + 1, &content, &search_word[range], search);
+            if column + 1 < content[0].len() && (row as i32) > 0 {
+                return search_recursive(row - 1, column + 1, content, &search_word[range], search);
             }
         }
     }
@@ -67,14 +67,14 @@ fn search_recursive(row: usize, column: usize, content: &Vec<String>, search_wor
 }
 
 fn search(row: usize, column: usize, content: &Vec<String>, search_word: &str) -> u32 {
-    search_recursive(row, column, &content, &search_word, Search::Up) +
-    search_recursive(row, column, &content, &search_word, Search::Down) +
-    search_recursive(row, column, &content, &search_word, Search::Left) +
-    search_recursive(row, column, &content, &search_word, Search::Right) +
-    search_recursive(row, column, &content, &search_word, Search::LeftUp) +
-    search_recursive(row, column, &content, &search_word, Search::LeftDown) +
-    search_recursive(row, column, &content, &search_word, Search::RightUp) +
-    search_recursive(row, column, &content, &search_word, Search::RightDown)
+    search_recursive(row, column, content, search_word, Search::Down) +
+    search_recursive(row, column, content, search_word, Search::Left) +
+    search_recursive(row, column, content, search_word, Search::Right) +
+    search_recursive(row, column, content, search_word, Search::LeftUp) +
+    search_recursive(row, column, content, search_word, Search::Up) +
+    search_recursive(row, column, content, search_word, Search::LeftDown) +
+    search_recursive(row, column, content, search_word, Search::RightUp) +
+    search_recursive(row, column, content, search_word, Search::RightDown)
 }
 
 fn part_one() -> io::Result<()> {
@@ -136,5 +136,6 @@ fn part_two() -> io::Result<()> {
 }
 
 fn main() -> io::Result<()> {
+    part_one().expect("An error occurred running day four part one");
     part_two()
 }

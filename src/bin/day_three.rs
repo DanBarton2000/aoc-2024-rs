@@ -295,5 +295,6 @@ fn part_two() -> io::Result<()> {
 }
 
 fn main() -> io::Result<()> {
+    part_one().expect("Failed to run day three part one");
     part_two()
 }

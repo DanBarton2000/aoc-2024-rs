@@ -2,35 +2,35 @@ use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
 use std::io::BufRead;
 
-fn map_and_updates() -> std::io::Result<(HashMap<u32, HashSet<u32>>, Vec<Vec<u32>>)> {
+type MapUpdates = (HashMap<u32, HashSet<u32>>, Vec<Vec<u32>>);
+
+fn map_and_updates() -> std::io::Result<MapUpdates> {
     let file = std::fs::File::open(".\\files\\day_five.txt")?;
     let reader = std::io::BufReader::new(file);
 
     let mut map: HashMap<u32, HashSet<u32>> = HashMap::new();
     let mut updates: Vec<Vec<u32>> = Vec::new();
 
-    for line in reader.lines() {
-        if let Ok(l) = line {
-            if l.contains("|") {
-                let split: Vec<&str> = l.split("|").collect();
-                match map.entry(split[0].parse().unwrap()) {
-                    Entry::Vacant(e) => {
-                        let mut update = HashSet::new();
-                        update.insert(split[1].parse::<u32>().unwrap());
-                        e.insert(update);
-                    },
-                    Entry::Occupied(mut e) => { e.get_mut().insert(split[1].parse::<u32>().unwrap()); }
-                }
-            } else if l.contains(",") {
-                let split: Vec<&str> = l.split(",").collect();
-                let mut vec: Vec<u32> = Vec::new();
-
-                for num in split {
-                    vec.push(num.parse().unwrap());
-                }
-
-                updates.push(vec);
+    for line in reader.lines().map_while(Result::ok) {
+        if line.contains("|") {
+            let split: Vec<&str> = line.split("|").collect();
+            match map.entry(split[0].parse().unwrap()) {
+                Entry::Vacant(e) => {
+                    let mut update = HashSet::new();
+                    update.insert(split[1].parse::<u32>().unwrap());
+                    e.insert(update);
+                },
+                Entry::Occupied(mut e) => { e.get_mut().insert(split[1].parse::<u32>().unwrap()); }
             }
+        } else if line.contains(",") {
+            let split: Vec<&str> = line.split(",").collect();
+            let mut vec: Vec<u32> = Vec::new();
+
+            for num in split {
+                vec.push(num.parse().unwrap());
+            }
+
+            updates.push(vec);
         }
     }
 
@@ -42,7 +42,7 @@ fn check_validity(update: &Vec<u32>, map: &HashMap<u32, HashSet<u32>>) -> bool {
     let mut valid = true;
 
     for num in update {
-        if let Some(set) = map.get(&num)
+        if let Some(set) = map.get(num)
         {
             if seen.intersection(set).count() > 0 {
                 valid = false;
@@ -56,11 +56,11 @@ fn check_validity(update: &Vec<u32>, map: &HashMap<u32, HashSet<u32>>) -> bool {
     valid
 }
 
-fn check_validity_indices(update: &Vec<u32>, map: &HashMap<u32, HashSet<u32>>) -> Option<(usize, usize)> {
+fn check_validity_indices(update: &[u32], map: &HashMap<u32, HashSet<u32>>) -> Option<(usize, usize)> {
     let mut seen: HashMap<u32, usize> = HashMap::new();
 
     for (i, num) in update.iter().enumerate() {
-        if let Some(set) = map.get(&num) {
+        if let Some(set) = map.get(num) {
             for k in seen.keys() {
                 if set.contains(k) {
                     return Some((i, seen[k]));
@@ -100,7 +100,7 @@ fn part_two() -> std::io::Result<()> {
         let mut add = false;
 
         loop {
-            let mut valid_indices = check_validity_indices(&update, &map);
+            let valid_indices = check_validity_indices(&update, &map);
             let Some((a, b)) = valid_indices else { break; };
             update.swap(a, b);
             add = true;
@@ -117,5 +117,6 @@ fn part_two() -> std::io::Result<()> {
 }
 
 fn main() -> std::io::Result<()> {
+    part_one().expect("Failed to read file");
     part_two()
 }

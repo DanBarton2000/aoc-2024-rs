@@ -1,7 +1,7 @@
 use std::fs::File;
 use std::io::{self, prelude::*, BufReader};
 
-fn is_safe(numbers: &Vec<u32>) -> bool {
+fn is_safe(numbers: &[u32]) -> bool {
     let increasing: bool = numbers[1] > numbers[0];
     let mut is_safe: bool = true;
 
@@ -9,7 +9,7 @@ fn is_safe(numbers: &Vec<u32>) -> bool {
         let direction = numbers[i] > numbers[i-1];
         let difference = numbers[i].abs_diff(numbers[i-1]);
 
-        if direction != increasing || difference < 1 || difference > 3 {
+        if direction != increasing || !(1..=3).contains(&difference) {
             is_safe = false;
             break;
         }
@@ -54,7 +54,7 @@ fn part_two() -> io::Result<()> {
     let mut safe_reports: u32 = 0;
 
     while reader.read_line(&mut string)? > 0 {
-        let mut numbers: Vec<u32> = string.split_whitespace().map(|x| x.parse::<u32>().unwrap()).collect();
+        let numbers: Vec<u32> = string.split_whitespace().map(|x| x.parse::<u32>().unwrap()).collect();
 
         if numbers.len() < 2 {
             panic!("Line has less than two numbers: {}", string);
@@ -74,7 +74,7 @@ fn part_two() -> io::Result<()> {
             }
         }
 
-        safe_reports += (is_safe == true) as u32;
+        safe_reports += is_safe as u32;
 
         string.clear();
     }
@@ -85,5 +85,6 @@ fn part_two() -> io::Result<()> {
 }
 
 fn main() -> io::Result<()> {
+    part_one().expect("An error occurred running day two part one");
     part_two()
 }
